@@ -1,5 +1,12 @@
 This is a simple tweet miner, built at (and after) an impromptu
-session at Strange Loop 2010.
+session at Strange Loop 2010. Note that this version uses ONLY
+tweets that have a to_user, which is a pretty small subset, so the
+graph is smaller and sparser than the one you'll find here:
+
+www.hilarymason.com/wp-content/uploads/2010/10/forcedir.html
+
+Someday this code should be fixed to extract user references from the
+message text instead.
 
 To use:
 
