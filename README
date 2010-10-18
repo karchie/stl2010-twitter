@@ -1,0 +1,25 @@
+This is a simple tweet miner, built at (and after) an impromptu
+session at Strange Loop 2010.
+
+To use:
+
+1. Install Leiningen (http://github.com/technomancy/leiningen).
+   You'll also need protovis (http://vis.stanford.edu/protovis)
+   installed as ../protovis-3.2 to view the output graph.
+
+2. Build:
+   lein uberjar
+
+  (Leiningen has been a little cranky for me -- I usually use Maven
+   for builds. I used lein here because it's supposedly simpler and
+   more clojure-y, but I'm still not impressed. If lein uberjar fails,
+   try it again. No, really, just enter the same command again, a few
+   times if necessary. Eventually it will probably work.)
+
+3. Run:
+   java -jar stl2010-0.1.0-standalone.jar network.js
+
+This generates the network data as a javascript document. Open
+vis-tweets.html to see the result.
+
+Questions? Contact Kevin A. Archie <karchie@alumni.caltech.edu>
