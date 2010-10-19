@@ -6,24 +6,31 @@
   (:require [clojure.contrib.http.agent :as http-agent]
 	    [clojure.contrib.json :as json]))
 
+(def +max-tweets+ 1200)
+
+(defn get-referenced-users
+  [tweet]
+  (set (map second (re-seq #"@(\w+)" (:text tweet)))))
+
 (defn build-nodes
   "Builds a set of unique nodes (Twitter users) from a collection of
 tweets."
   [tweets]
-  (reduce (fn [nodes tweet]
-	    (let [from_node {:nodeName (:from_user tweet)
-			     :nodeValue (:from_user_id tweet)}
-		  to_node {:nodeName (:to_user tweet)
-			   :nodeValue (:to_user_id tweet)}]
-	      (if (:nodeName to_node)
-		(conj nodes from_node to_node)
-		(conj nodes from_node))))
-	  #{} tweets))
+  (map #(hash-map :nodeName %)
+       (set (mapcat #(conj (get-referenced-users %) (:from_user %))
+		    tweets))))
 
 (defn build-nodes-index
   "Builds a map from node name to 0-offset integer index"
   [nodes]
   (zipmap (map :nodeName nodes) (range)))
+
+(defn build-tweet-edge-identities
+  "Builds the edge identities from a tweet"
+  [tweet]
+  (let [from-user (:from_user tweet)
+	refs (get-referenced-users tweet)]
+    (map #(hash-map :source from-user :target %) refs)))
 
 (defn build-edges-map
   "From a collection of tweets, builds a map from edge identity (as a
@@ -31,9 +38,9 @@ map with :source and :target) to edge weight (number of occurrences)"
   [tweets]
   (reduce
    (fn [m tweet]
-     (let [edge {:source (:from_user tweet) :target (:to_user tweet)}]
-       (if (and (:source edge) (:target edge))
-	 (assoc m edge (inc (get m edge 0)))
+     (let [edges (build-tweet-edge-identities tweet)]
+       (if (seq edges)
+	 (apply assoc m (mapcat #(vector % (inc (get m % 0))) edges))
 	 m)))
    {} tweets))
 
@@ -84,7 +91,7 @@ in another search request."
 		      (println "getting tweets before id" oldest)
 		      (get-some-tweets terms :max-id (dec oldest)))
 		    (get-some-tweets terms))]
-       (if (empty? tweets)
+       (if (or (empty? tweets) (>= (count acc) +max-tweets+))
 	 acc
 	 (get-tweets terms (concat acc tweets)))))
   ([terms] (get-tweets terms [])))
